@@ -2,6 +2,8 @@
 
 # Using Just: https://github.com/casey/just?tab=readme-ov-file#installation
 
+set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
+
 
 mod demo
 mod cdn
@@ -20,6 +22,10 @@ default:
 # Alias for `just demo`.
 dev:
 	just demo
+
+# Run the demo stack using native Windows PowerShell terminals.
+demo-windows:
+	pwsh -NoLogo -ExecutionPolicy Bypass -File demo/start-windows.ps1
 
 # Install any dependencies.
 install:
