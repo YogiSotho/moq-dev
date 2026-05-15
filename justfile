@@ -31,17 +31,17 @@ mod web 'demo/web'
 # Run the demo by default.
 default:
     just demo
-
 # Alias for `just demo`.
 dev:
     just demo
-
+# Run the demo stack using native Windows PowerShell terminals.
+demo-windows:
+    pwsh -NoLogo -ExecutionPolicy Bypass -File demo/start-windows.ps1
 # Install repo-wide tooling. Per-language deps install on first invocation
 # of `just <lang> check`.
 install:
     bun install
     cargo install --locked cargo-shear cargo-sort cargo-upgrades cargo-edit cargo-sweep cargo-semver-checks release-plz
-
 # Fast inner-loop checks. Runs JS, Rust, and Markdown lints.
 # Shell + workflow + TOML + Nix + justfile lints skip silently if their
 # binaries aren't on $PATH; `nix develop` provides them, and `just ci`
@@ -55,7 +55,6 @@ check *args:
     @if command -v nixfmt >/dev/null 2>&1; then nixfmt --check $(find . -name '*.nix' -not -path './node_modules/*' -not -path './target/*' -not -path './.venv/*'); fi
     @for f in $(find . -name justfile -not -path './node_modules/*' -not -path './target/*' -not -path './.venv/*'); do just --fmt --unstable --check --justfile "$f"; done
     just gh check
-
 # Run every per-language `ci` with the diff vs BASE; each greps for its
 # own scope and skips when nothing relevant changed. Pass BASE="" to
 # default to $GITHUB_BASE_REF (CI) or origin/main (local).
@@ -102,7 +101,6 @@ ci BASE="":
     nixfmt --check $(find . -name '*.nix' -not -path './node_modules/*' -not -path './target/*' -not -path './.venv/*')
     for f in $(find . -name justfile -not -path './node_modules/*' -not -path './target/*' -not -path './.venv/*'); do just --fmt --unstable --check --justfile "$f"; done
     just gh ci
-
 # Auto-fix linting/formatting issues across all languages.
 # shfmt / taplo / nixfmt / just --fmt skipped silently if missing locally.
 fix:
@@ -114,13 +112,11 @@ fix:
     @if command -v taplo >/dev/null 2>&1; then RUST_LOG=error taplo format; fi
     @if command -v nixfmt >/dev/null 2>&1; then nixfmt $(find . -name '*.nix' -not -path './node_modules/*' -not -path './target/*' -not -path './.venv/*'); fi
     @for f in $(find . -name justfile -not -path './node_modules/*' -not -path './target/*' -not -path './.venv/*'); do just --fmt --unstable --justfile "$f"; done
-
 # Build the packages.
 build:
     just js build
     just rs build
     if command -v uv &> /dev/null; then just py build; fi
-
 # Delete build artifacts and caches to reclaim disk space. Each language
 # owns its own `clean` (see js/rs/py/kt/swift/go justfiles); this
 # orchestrates them, sweeps the caches no language owns, then recurses into
@@ -151,13 +147,11 @@ clean:
     	echo "==> cleaning ${wt}"
     	(cd "$wt" && just clean) || echo "    (skipped: just clean failed in ${wt})"
     done
-
 # Upgrade any tooling
 update:
     just js update
     just rs update
     nix flake update
-
 # Serve the documentation locally.
 doc:
     cd doc && bun run dev

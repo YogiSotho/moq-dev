@@ -82,6 +82,20 @@ just
 
 Then visit <http://localhost:5173> to see the demo.
 
+### Windows Demo Launcher
+
+The `just` recipes are still primarily Unix-oriented, so `just demo` may fail on native Windows if `sh`/`bash` is not installed.
+
+For the local demo stack on Windows, use the PowerShell launcher instead:
+
+```powershell
+just demo-windows
+```
+
+That opens separate terminals for the relay, demo publisher, and Vite web app. It expects `cargo`, `bun`, and `ffmpeg` to be available in `PATH`.
+
+If you want the broader `just` workflow rather than only the demo, WSL is still the more complete option because several recipes use Bash-specific scripting.
+
 ## Architecture
 
 MoQ is designed as a layered protocol stack.
