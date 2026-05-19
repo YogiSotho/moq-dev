@@ -170,6 +170,14 @@ just pub tos  # Terminal 2: Publish a demo video using ffmpeg
 just web      # Terminal 3: Start web server
 ```
 
+On Windows, you can install a repo-managed `pre-push` hook that runs the CI command inside WSL before `git push`:
+
+```sh
+just install-hooks
+```
+
+The hook calls `scripts/pre-push.ps1`, which runs `nix --extra-experimental-features 'nix-command flakes' develop --command just ci` in your WSL environment.
+
 There are more commands: check out the [justfile](justfile).
 
 ## Iroh support

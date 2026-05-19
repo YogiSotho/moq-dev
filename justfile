@@ -26,6 +26,11 @@ install:
 	bun install
 	cargo install --locked cargo-shear cargo-sort cargo-upgrades cargo-edit cargo-sweep cargo-semver-checks release-plz
 
+# Install repository-managed git hooks.
+install-hooks:
+	git config core.hooksPath .githooks
+	@echo "Configured git hooks in .githooks"
+
 # Run the CI checks
 check *args:
 	#!/usr/bin/env bash
@@ -78,7 +83,7 @@ ci:
 	(cd cdn && just check)
 
 	# Run the nix checks.
-	nix flake check
+	nix --extra-experimental-features 'nix-command flakes' flake check
 
 	# Run the unit tests with all features to exercise all QUIC backends
 	just test --all-features
@@ -175,7 +180,10 @@ build:
 	#!/usr/bin/env bash
 	set -euo pipefail
 
-	bun run --filter='*' build
+	find . -mindepth 2 -maxdepth 3 -type d -name node_modules -not -path './node_modules' -prune -exec rm -rf {} +
+	bun install --frozen-lockfile
+	bun run --filter='!moq-doc' build
+	(cd doc && bun run build)
 	cargo build
 
 	# Build moq-ffi from source into py/moq-lite's venv.
