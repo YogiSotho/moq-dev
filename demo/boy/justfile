@@ -2,13 +2,46 @@ set fallback
 
 # Run the GB demo: relay + emulator publisher + web viewer.
 default:
+	#!/usr/bin/env bash
+	set -euo pipefail
+
 	bun install
 
-	bun run concurrently --kill-others --prefix-colors auto \
-		"just relay" \
-		"just wait && just b2s" \
-		"just wait && just dangan" \
-		"just wait && just web"
+	pids=()
+	cleanup() {
+		local pid
+		for pid in "${pids[@]:-}"; do
+			kill "$pid" 2>/dev/null || true
+		done
+	}
+	trap cleanup EXIT INT TERM
+
+	just relay &
+	pids+=($!)
+
+	(
+		just wait
+		just b2s
+	) &
+	pids+=($!)
+
+	(
+		just wait
+		just dangan
+	) &
+	pids+=($!)
+
+	(
+		just wait
+		just web
+	) &
+	pids+=($!)
+
+	status=0
+	wait -n "${pids[@]}" || status=$?
+	cleanup
+	wait "${pids[@]}" 2>/dev/null || true
+	exit "$status"
 
 # Download the given ROM from our R2 bucket.
 download rom:
