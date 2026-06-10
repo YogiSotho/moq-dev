@@ -86,6 +86,7 @@ export class Encoder {
 	readonly root: Getter<AudioNode | undefined> = this.#gain;
 
 	active = new Signal<boolean>(false);
+	bytesSent = new Signal<number>(0);
 
 	#signals = new Effect();
 
@@ -260,7 +261,9 @@ export class Encoder {
 
 					// Each audio frame is its own group so the relay can forward it without
 					// waiting for a group boundary. Loss is handled by the codec's PLC.
-					track.writeFrame(Container.Legacy.encodeFrame(frame, frame.timestamp as Time.Micro));
+						const encoded = Container.Legacy.encodeFrame(frame, frame.timestamp as Time.Micro);
+						track.writeFrame(encoded);
+						this.bytesSent.update((bytes) => bytes + encoded.byteLength);
 				},
 				error: (err) => {
 					console.error("encoder error", err);

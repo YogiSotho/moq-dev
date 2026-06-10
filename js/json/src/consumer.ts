@@ -1,7 +1,8 @@
 import type * as Moq from "@moq/net";
-import type * as z from "zod/mini";
 import { merge } from "./diff.ts";
 import type { Config } from "./producer.ts";
+
+type Schema<T> = { parse(value: unknown): T };
 
 /**
  * Consumes a JSON value from a track, reconstructing it from snapshots and deltas.
@@ -11,7 +12,7 @@ import type { Config } from "./producer.ts";
  */
 export class Consumer<T> {
 	#track: Moq.Track;
-	#schema?: z.ZodMiniType<T>;
+	#schema?: Schema<T>;
 
 	#group?: Moq.Group;
 	#current?: unknown;

@@ -98,6 +98,13 @@ export class Mse implements Backend {
 		}
 	}
 
+	#recordFrame(bytesReceived: number, sampleCount = 0): void {
+		this.#stats.update((stats) => ({
+			sampleCount: (stats?.sampleCount ?? 0) + sampleCount,
+			bytesReceived: (stats?.bytesReceived ?? 0) + bytesReceived,
+		}));
+	}
+
 	#runCmafMedia(
 		effect: Effect,
 		sub: Moq.Track,
@@ -122,6 +129,7 @@ export class Mse implements Backend {
 				// Extract the timestamp from the CMAF segment and mark when we received it.
 				const timestamp = Container.Cmaf.decodeTimestamp(frame, init);
 				this.source.sync.received(Moq.Time.Milli.fromMicro(timestamp), "audio");
+					this.#recordFrame(frame.byteLength);
 
 				await this.#appendBuffer(sourceBuffer, frame);
 
@@ -155,6 +163,9 @@ export class Mse implements Backend {
 
 			let sequence = 1;
 			let duration: Moq.Time.Micro | undefined;
+				const packetSamples = config.jitter
+					? Math.round((config.sampleRate * config.jitter) / 1000)
+					: 0;
 
 			// Buffer one frame so we can compute accurate duration from the next frame's timestamp
 			let pending: Container.Frame;
@@ -168,6 +179,7 @@ export class Mse implements Backend {
 				// Mark that we received this frame for latency calculation.
 				const timestamp = Moq.Time.Milli.fromMicro(pending.timestamp as Moq.Time.Micro);
 				this.source.sync.received(timestamp, "audio");
+					this.#recordFrame(pending.data.byteLength, packetSamples);
 
 				break;
 			}
@@ -185,6 +197,7 @@ export class Mse implements Backend {
 					// Mark that we received this frame for latency calculation.
 					const timestamp = Moq.Time.Milli.fromMicro(frame.timestamp as Moq.Time.Micro);
 					this.source.sync.received(timestamp, "audio");
+					this.#recordFrame(frame.data.byteLength, packetSamples);
 				}
 
 				// Wrap raw frame in moof+mdat

@@ -1,4 +1,5 @@
 import * as Catalog from "@moq/hang/catalog";
+import * as Util from "@moq/hang/util";
 import * as Moq from "@moq/net";
 import { Effect, Signal } from "@moq/signals";
 import * as Audio from "./audio";
@@ -22,6 +23,7 @@ export class Broadcast {
 
 	audio: Audio.Encoder;
 	video: Video.Root;
+	bytesSent = new Signal<number>(0);
 
 	// The catalog, editable at any time regardless of whether anyone is subscribed. The base
 	// `video`/`audio` sections are kept in sync from the encoders; an application adds its own root
@@ -39,7 +41,14 @@ export class Broadcast {
 		this.video = new Video.Root({ ...props?.video, connection: this.connection });
 
 		this.signals.run(this.#runCatalog.bind(this));
+		this.signals.run(this.#runBytesSent.bind(this));
 		this.signals.run(this.#run.bind(this));
+	}
+
+	#runBytesSent(effect: Effect) {
+		const audio = effect.get(this.audio.bytesSent);
+		const video = effect.get(this.video.bytesSent);
+		this.bytesSent.set(Util.Bytes.sum(audio, video));
 	}
 
 	// Keep the base catalog sections in sync with the encoders, leaving extension sections alone.

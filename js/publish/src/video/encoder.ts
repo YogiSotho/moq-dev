@@ -57,6 +57,7 @@ export class Encoder {
 
 	// True when the encoder is actively serving a track.
 	active = new Signal<boolean>(false);
+	bytesSent = new Signal<number>(0);
 
 	// Connection signal for reading send bandwidth.
 	connection: Getter<Moq.Connection.Established | undefined>;
@@ -96,7 +97,8 @@ export class Encoder {
 						lastKeyframe = frame.timestamp as Time.Micro;
 					}
 
-					producer.encode(frame, frame.timestamp as Time.Micro, frame.type === "key");
+						const written = producer.encode(frame, frame.timestamp as Time.Micro, frame.type === "key");
+						this.bytesSent.update((bytes) => bytes + written);
 				},
 				error: (err: Error) => {
 					producer.close(err);

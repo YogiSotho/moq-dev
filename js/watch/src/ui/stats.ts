@@ -1,4 +1,5 @@
 import type { Effect, Signal } from "@moq/signals";
+import * as Util from "@moq/hang/util";
 import * as DOM from "@moq/signals/dom";
 import type MoqWatch from "../element";
 import { audio, buffer, icon, network, video } from "./icons";
@@ -38,8 +39,17 @@ function formatBandwidth(bps: number | undefined, dir: "up" | "down"): string | 
 
 function networkRow(parent: Effect, watch: MoqWatch): HTMLElement {
 	const { el, data } = row("network", "network", network);
+	let previous: Util.Bytes.Sample | undefined;
 
 	parent.interval(() => {
+		const now = performance.now();
+		const current: Util.Bytes.Sample = {
+			bytes: watch.backend.bytesReceived.peek(),
+			when: now,
+		};
+		const mediaBitrate = Util.Bytes.sampleBitrate(previous, current);
+		previous = current;
+
 		const conn = watch.connection.established.peek();
 		if (!conn) {
 			data.textContent = "N/A";
@@ -49,6 +59,7 @@ function networkRow(parent: Effect, watch: MoqWatch): HTMLElement {
 		const parts = [
 			formatBandwidth(conn.recvBandwidth?.peek(), "down"),
 			formatBandwidth(conn.sendBandwidth?.peek(), "up"),
+			mediaBitrate !== undefined ? `media ${formatBitrate(mediaBitrate)}` : null,
 			rtt !== undefined && rtt > 0 ? `${rtt.toFixed(0)}ms` : null,
 		].filter((p): p is string => p !== null);
 		data.textContent = parts.length > 0 ? parts.join("\n") : "N/A";

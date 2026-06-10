@@ -7,6 +7,13 @@
 	border: var(--spacing-1) solid var(--color-white-alpha-10);
 }
 
+.status-indicator-content {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 2px;
+}
+
 .status-indicator-dot {
 	position: relative;
 	width: 12px;
@@ -97,6 +104,22 @@
 .status-indicator-text {
 	font-size: 1rem;
 	letter-spacing: 0.1rem;
+}
+
+.status-indicator-detail {
+	font-size: 0.75rem;
+	letter-spacing: 0.05rem;
+	opacity: 0.85;
+	text-transform: uppercase;
+}
+
+.status-indicator-detail--error,
+.status-indicator-detail--warning,
+.status-indicator-detail--live,
+.status-indicator-detail--audio-only,
+.status-indicator-detail--video-only,
+.status-indicator-detail--connecting {
+	color: inherit;
 }
 
 @keyframes status-pulse {

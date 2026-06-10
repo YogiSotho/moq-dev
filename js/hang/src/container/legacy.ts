@@ -42,7 +42,7 @@ export class Producer {
 		this.#track = track;
 	}
 
-	encode(data: Uint8Array | Source, timestamp: Time.Micro, keyframe: boolean) {
+	encode(data: Uint8Array | Source, timestamp: Time.Micro, keyframe: boolean): number {
 		if (keyframe) {
 			this.#group?.close();
 			this.#group = this.#track.appendGroup();
@@ -50,7 +50,9 @@ export class Producer {
 			throw new Error("must start with a keyframe");
 		}
 
-		this.#group?.writeFrame(encodeFrame(data, timestamp));
+		const encoded = encodeFrame(data, timestamp);
+		this.#group?.writeFrame(encoded);
+		return encoded.byteLength;
 	}
 
 	close(err?: Error) {

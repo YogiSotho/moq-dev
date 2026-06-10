@@ -1,4 +1,5 @@
 import * as Moq from "@moq/net";
+import * as Util from "@moq/hang/util";
 import { Effect, Signal } from "@moq/signals";
 import * as Audio from "./audio";
 import type { Broadcast } from "./broadcast";
@@ -111,6 +112,7 @@ export class MultiBackend implements Backend {
 	latency: Signal<Latency>;
 	jitter: Signal<Moq.Time.Milli>;
 	paused: Signal<boolean>;
+	bytesReceived: Signal<number>;
 
 	video: VideoBackend;
 	#videoSource: Video.Source;
@@ -139,10 +141,18 @@ export class MultiBackend implements Backend {
 
 		this.video = new VideoBackend(this.#videoSource);
 		this.audio = new AudioBackend(this.#audioSource);
+		this.bytesReceived = new Signal<number>(0);
 
 		this.paused = Signal.from(props?.paused ?? false);
 
+		this.signals.run(this.#runBytesReceived.bind(this));
 		this.signals.run(this.#runElement.bind(this));
+	}
+
+	#runBytesReceived(effect: Effect): void {
+		const video = effect.get(this.video.stats);
+		const audio = effect.get(this.audio.stats);
+		this.bytesReceived.set(Util.Bytes.sum(video?.bytesReceived, audio?.bytesReceived));
 	}
 
 	#runElement(effect: Effect): void {

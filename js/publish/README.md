@@ -91,9 +91,31 @@ const publish = new Publish.Broadcast(connection, {
 publish.source.camera.enabled.set(true);
 ```
 
+### Measuring Uplink Bitrate
+
+`publish.bytesSent` exposes a cumulative byte counter across the active audio and video tracks. Poll it and compute bitrate from the delta:
+
+```typescript
+let previousBytes = publish.bytesSent.peek();
+let previousNow = performance.now();
+
+publish.signals.interval(() => {
+    const now = performance.now();
+    const bytes = publish.bytesSent.peek();
+    const bitrate = ((bytes - previousBytes) * 8 * 1000) / (now - previousNow);
+
+    previousBytes = bytes;
+    previousNow = now;
+
+    console.log(`uplink: ${Math.round(bitrate)} bps`);
+}, 1000);
+```
+
 ## UI Web Component
 
 `@moq/publish` includes a Web Component UI overlay (`<moq-publish-ui>`) with source selection (camera, screen, file, microphone) and status indicator. It is built on top of `@moq/signals` with no framework dependency.
+
+When publishing is active, the status indicator also shows a live uplink bitrate line derived from the aggregate `bytesSent` counter.
 
 ```html
 <script type="module">

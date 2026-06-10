@@ -1,7 +1,8 @@
 import type * as Moq from "@moq/net";
-import type * as z from "zod/mini";
 
 import { deepEqual, diff } from "./diff.ts";
+
+type Schema<T> = { parse(value: unknown): T };
 
 // Maximum frames (snapshot + deltas) in a single group before a new snapshot is forced. Kept
 // well below the per-group frame cap so a late joiner can always read the snapshot at frame 0.
@@ -18,7 +19,7 @@ export interface Config<T> {
 	deltaRatio?: number;
 
 	// Optional zod schema used to validate each value before publishing.
-	schema?: z.ZodMiniType<T>;
+	schema?: Schema<T>;
 
 	// Starting value for {@link Producer.mutate} before anything has been published. Required to
 	// mutate a producer that hasn't published yet (e.g. a fresh catalog); ignored once a value exists.

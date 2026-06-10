@@ -1,4 +1,5 @@
 import * as Catalog from "@moq/hang/catalog";
+import * as Util from "@moq/hang/util";
 import type * as Moq from "@moq/net";
 import { Effect, type Getter, Signal } from "@moq/signals";
 import { Encoder, type EncoderProps } from "./encoder";
@@ -24,6 +25,7 @@ export class Root {
 	source: Signal<Source | undefined>;
 	hd: Encoder;
 	sd: Encoder;
+	bytesSent = new Signal<number>(0);
 
 	frame = new Signal<VideoFrame | undefined>(undefined);
 
@@ -43,7 +45,14 @@ export class Root {
 		this.flip = Signal.from(props?.flip ?? false);
 
 		this.signals.run(this.#runCatalog.bind(this));
+		this.signals.run(this.#runBytesSent.bind(this));
 		this.signals.run(this.#runFrame.bind(this));
+	}
+
+	#runBytesSent(effect: Effect) {
+		const hd = effect.get(this.hd.bytesSent);
+		const sd = effect.get(this.sd.bytesSent);
+		this.bytesSent.set(Util.Bytes.sum(hd, sd));
 	}
 
 	#runFrame(effect: Effect) {

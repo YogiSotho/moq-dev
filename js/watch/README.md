@@ -94,6 +94,26 @@ watch.video.media.subscribe((stream) => {
 });
 ```
 
+### Measuring Bitrate
+
+`watch.backend.bytesReceived` exposes a cumulative byte counter across audio and video. Poll it at whatever interval you want and derive bitrate from the delta:
+
+```typescript
+let previousBytes = watch.backend.bytesReceived.peek();
+let previousNow = performance.now();
+
+watch.signals.interval(() => {
+    const now = performance.now();
+    const bytes = watch.backend.bytesReceived.peek();
+    const bitrate = ((bytes - previousBytes) * 8 * 1000) / (now - previousNow);
+
+    previousBytes = bytes;
+    previousNow = now;
+
+    console.log(`bitrate: ${Math.round(bitrate)} bps`);
+}, 1000);
+```
+
 ## UI Web Component
 
 `@moq/watch` includes a Web Component UI overlay (`<moq-watch-ui>`) with playback controls, volume, buffering indicator, quality selector, and stats panel. It is built on top of `@moq/signals` with no framework dependency.
