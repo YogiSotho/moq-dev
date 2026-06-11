@@ -36,7 +36,8 @@ dev:
     just demo
 # Run the demo stack using native Windows PowerShell terminals.
 demo-windows:
-    pwsh -NoLogo -ExecutionPolicy Bypass -File demo/start-windows.ps1
+    #!pwsh
+    & "{{ justfile_directory() }}/demo/start-windows.ps1"
 # Install repo-wide tooling. Per-language deps install on first invocation
 # of `just <lang> check`.
 install:

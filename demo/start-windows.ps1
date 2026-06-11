@@ -65,6 +65,8 @@ $root = Split-Path -Parent $PSScriptRoot
 $relayDir = Join-Path $PSScriptRoot 'relay'
 $pubDir = Join-Path $PSScriptRoot 'pub'
 $webDir = Join-Path $PSScriptRoot 'web'
+$workspaceNodeModulesDir = Join-Path $root 'node_modules'
+$webViteDir = Join-Path $webDir 'node_modules\vite'
 $pubMediaDir = Join-Path $pubDir 'media'
 $mediaFile = Join-Path $pubMediaDir "$Broadcast.mp4"
 $certificateUrl = 'http://localhost:4443/certificate.sha256'
@@ -101,8 +103,14 @@ $publisherCommand = @(
 
 Start-DemoTerminal -Title 'publisher' -WorkingDirectory $root -Command $publisherCommand
 
-$webCommand = @(
+$webSetupCommand = if ((Test-Path $workspaceNodeModulesDir) -and (Test-Path $webViteDir)) {
+    "Write-Host 'Using existing Bun workspace install'"
+} else {
     'bun install'
+}
+
+$webCommand = @(
+    $webSetupCommand
     "`$env:VITE_RELAY_URL = '$RelayUrl'"
     'bun --bun vite --open'
 ) -join '; '
